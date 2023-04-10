@@ -17,5 +17,10 @@ module CSR_EX(
     // TODO: Complete this module
 
     /* FIXME: Write your code here... */
-
+    initial begin
+        CSR_addr_EX=0;
+        CSR_zimm_EX=0;
+        CSR_zimm_or_reg_EX=0;
+        CSR_write_en_EX=0;
+    end
 endmodule
