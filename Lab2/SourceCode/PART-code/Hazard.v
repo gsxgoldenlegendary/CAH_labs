@@ -69,9 +69,6 @@ module HarzardUnit (input wire rst,
         if (rst) begin
             flushF  = 1;
             bubbleF = 0;
-            end else if (br || jalr || jal) begin
-            flushF  = 0;
-            bubbleF = 1;
             end else begin
             flushF  = 0;
             bubbleF = 0;
@@ -83,8 +80,8 @@ module HarzardUnit (input wire rst,
             flushD  = 1;
             bubbleD = 0;
             end else if (br || jalr || jal) begin
-            flushD  = 0;
-            bubbleD = 1;
+            flushD  = 1;
+            bubbleD = 0;
             end else begin
             flushD  = 0;
             bubbleD = 0;
@@ -94,6 +91,9 @@ module HarzardUnit (input wire rst,
     always @(*) begin
         if (rst) begin
             flushE  = 1;
+            bubbleE = 0;
+            end else if (br || jalr) begin
+            flushE = 1;
             bubbleE = 0;
             end else begin
             flushE  = 0;

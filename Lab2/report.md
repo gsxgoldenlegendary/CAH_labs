@@ -16,4 +16,20 @@ S3: initial
 
 Apr 11 07:50
 E4:alu_func=0
-S3: decoder缺少else
+S4: decoder缺少else
+
+Apr 11 08:00
+E5:beq与j同时跳转错误
+S5:优先选择br
+
+Apr 11 08:18
+E6:beq 无限跳转
+S6:跳转时flushE
+
+Apr 11 08:36
+E7:bne 跳转失败
+S7:加上bne跳转逻辑
+
+Apr 11 08:42
+E8:blt 跳转错误
+S8: 改为有符号数比较

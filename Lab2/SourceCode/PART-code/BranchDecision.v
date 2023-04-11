@@ -28,9 +28,9 @@ begin
         
         /* FIXME: Write your code here... */
         `BGEU: br = (reg1 >= reg2) ? 1 : 0;
-        `BLT: br  = (reg1 < reg2) ? 1 : 0;
+        `BLT: br  = ($signed(reg1) < $signed(reg2)) ? 1 : 0;
         `BGE: br  = ($signed(reg1) >= $signed(reg2)) ? 1 : 0;
-        
+        `BNE: br  = (reg1 != reg2) ? 1 : 0;
         default: br = 0;
     endcase
 end

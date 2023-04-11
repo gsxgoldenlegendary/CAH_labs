@@ -26,9 +26,9 @@ module NPC_Generator (input wire [31:0] PC,
 
 /* FIXME: Write your code here... */
 always @(*) begin
-    if (jal) NPC       = jal_target;
+    if (br) NPC       = br_target;
     else if (jalr) NPC = jalr_target;
-    else if (br) NPC   = br_target;
+    else if (jal) NPC   = jal_target;
     else NPC           = PC;
 end
 
