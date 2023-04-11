@@ -5,8 +5,8 @@
 //              !!! ALL YOU NEED TO CHANGE IS 4 FILE PATH BELOW !!!	
 //				(they are all optional, you can run cpu without change paths here,if files are failed to open, we will not dump the content to .txt and will not try to initial your bram)
 
-`define DataCacheContentLoadPath "/home/songxiao/vDesktop/CAH_labs/Lab2/Simulation/1testAll.data"                 //Modify to path/to/your/testdata
-`define InstCacheContentLoadPath "/home/songxiao/vDesktop/CAH_labs/Lab2/Simulation/1testAll.inst"                 //Modify to path/to/your/testdata
+`define DataCacheContentLoadPath "/home/songxiao/vDesktop/CAH_labs/Lab2/Simulation/2testAll.data"                 //Modify to path/to/your/testdata
+`define InstCacheContentLoadPath "/home/songxiao/vDesktop/CAH_labs/Lab2/Simulation/2testAll.inst"                 //Modify to path/to/your/testdata
 `define DataCacheContentSavePath "/home/songxiao/vDesktop/CAH_labs/Lab2/Simulation/DumpDataCacheContent.txt"      //Modify to path/to/your/testdata
 `define InstCacheContentSavePath "/home/songxiao/vDesktop/CAH_labs/Lab2/Simulation/DumpInstCacheContent.txt"      //Modify to path/to/your/testdata
 `define BRAMWORDS 4096  //a word is 32bit, so our bram is 4096*32bit

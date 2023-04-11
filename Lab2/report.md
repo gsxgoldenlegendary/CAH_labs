@@ -33,3 +33,7 @@ S7:加上bne跳转逻辑
 Apr 11 08:42
 E8:blt 跳转错误
 S8: 改为有符号数比较
+
+Apr 11 09:14
+E9:前递失败
+S9:前两级bubble，exe flush
