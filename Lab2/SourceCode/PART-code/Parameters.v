@@ -106,5 +106,19 @@
 `define I_CSRRW 3'b001
 `define I_CSRRWI 3'b101
 
+`define ustatus 12'h000
+`define uie 12'h004
+`define utvec 12'h005
+
+`define uscratch 12'h040
+`define uepc 12'h041
+`define ucause 12'h042
+`define utval 12'h043
+`define uip 12'h044
+
+`define fflags 12'h001
+`define frm 12'h002
+`define fcsr 12'h003
+
 `endif
 

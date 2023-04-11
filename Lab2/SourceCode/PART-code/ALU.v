@@ -32,7 +32,7 @@ always @(*) begin
         `LUI: ALU_out    = op2;
         `OP1: ALU_out    = op1;
         `OP2: ALU_out    = op2;
-        `NAND: ALU_out   = ~(op1 & op2);
+        `NAND: ALU_out   = (~op1 & op2);
         default: ALU_out = 32'b0;
     endcase
 end

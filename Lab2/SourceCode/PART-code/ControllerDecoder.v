@@ -180,106 +180,150 @@ always @(*) begin
     CSR_zimm_or_reg = 0;
     if (funct3 == `I_ADDI) begin
         ALU_func = `ADD;
-    end else if (funct3 == `I_SLTI) begin
+        end else if (funct3 == `I_SLTI) begin
         ALU_func = `SLT;
-    end else if (funct3 == `I_SLTIU) begin
+        end else if (funct3 == `I_SLTIU) begin
         ALU_func = `SLTU;
-    end else if (funct3 == `I_XORI) begin
+        end else if (funct3 == `I_XORI) begin
         ALU_func = `XOR;
-    end else if (funct3 == `I_ORI) begin
+        end else if (funct3 == `I_ORI) begin
         ALU_func = `OR;
-    end else if (funct3 == `I_ANDI) begin
+        end else if (funct3 == `I_ANDI) begin
         ALU_func = `AND;
-    end else if (funct3 == `I_SLLI) begin
+        end else if (funct3 == `I_SLLI) begin
         ALU_func = `SLL;
-    end else if (funct3 == `I_SR) begin
+        end else if (funct3 == `I_SR) begin
         if (funct7 == `I_SRAI) begin
             ALU_func = `SRA;
             end else begin
             ALU_func = `SRL;
         end
-    end else begin
-    reg_write_en = 0;
-    ALU_func     = 0;
-end
-end else if (opcode == `S_TYPE) begin
-jal          = 0;
-jalr         = 0;
-op1_src      = 0;
-op2_src      = 1;
-ALU_func     = `ADD;
-br_type      = 0;
-load_npc     = 0;
-wb_select    = 0;
-load_type    = 0;
-reg_write_en = 0;
-
-imm_type        = `STYPE;
-CSR_write_en    = 0;
-CSR_zimm_or_reg = 0;
-case (funct3)
-    `S_SB:   cache_write_en = 4'h1;
-    `S_SH:   cache_write_en = 4'h3;
-    `S_SW:   cache_write_en = 4'hf;
-    default: cache_write_en = 0;
-endcase
-end else if (opcode == `R_TYPE) begin
-jal             = 0;
-jalr            = 0;
-op1_src         = 0;
-op2_src         = 0;
-br_type         = 0;
-load_npc        = 0;
-wb_select       = 0;
-load_type       = 0;
-reg_write_en    = 1;
-cache_write_en  = 0;
-imm_type        = `RTYPE;
-CSR_write_en    = 0;
-CSR_zimm_or_reg = 0;
-if (funct3 == `R_AS) begin
-    if (funct7 == `R_ADD) begin
-        ALU_func = `ADD;
         end else begin
-        ALU_func = `SUB;
+        reg_write_en = 0;
+        ALU_func     = 0;
     end
-    end else if (funct3 == `R_SLL) begin
-    ALU_func = `SLL;
-    end else if (funct3 == `R_SLT) begin
-    ALU_func = `SLT;
-    end else if (funct3 == `R_SLTU) begin
-    ALU_func = `SLTU;
-    end else if (funct3 == `R_XOR) begin
-    ALU_func = `XOR;
-    end else if (funct3 == `R_SR) begin
-    if (funct7 == `R_SRA) begin
-        ALU_func = `SRA;
-        end else begin
-        ALU_func = `SRL;
-    end
-    end else if (funct3 == `R_OR) begin
-    ALU_func = `OR;
-    end else if (funct3 == `R_AND) begin
-    ALU_func = `AND;
-    end else begin
+    end else if (opcode == `S_TYPE) begin
+    jal          = 0;
+    jalr         = 0;
+    op1_src      = 0;
+    op2_src      = 1;
+    ALU_func     = `ADD;
+    br_type      = 0;
+    load_npc     = 0;
+    wb_select    = 0;
+    load_type    = 0;
     reg_write_en = 0;
-    ALU_func     = 0;
-end
-end else begin
-jal             = 0;
-jalr            = 0;
-op1_src         = 0;
-op2_src         = 0;
-ALU_func        = 0;
-br_type         = 0;
-load_npc        = 0;
-wb_select       = 0;
-load_type       = 0;
-reg_write_en    = 0;
-cache_write_en  = 0;
-imm_type        = 0;
-CSR_write_en    = 0;
-CSR_zimm_or_reg = 0;
+    
+    imm_type        = `STYPE;
+    CSR_write_en    = 0;
+    CSR_zimm_or_reg = 0;
+    case (funct3)
+        `S_SB:   cache_write_en = 4'h1;
+        `S_SH:   cache_write_en = 4'h3;
+        `S_SW:   cache_write_en = 4'hf;
+        default: cache_write_en = 0;
+    endcase
+    end else if (opcode == `R_TYPE) begin
+    jal             = 0;
+    jalr            = 0;
+    op1_src         = 0;
+    op2_src         = 0;
+    br_type         = 0;
+    load_npc        = 0;
+    wb_select       = 0;
+    load_type       = 0;
+    reg_write_en    = 1;
+    cache_write_en  = 0;
+    imm_type        = `RTYPE;
+    CSR_write_en    = 0;
+    CSR_zimm_or_reg = 0;
+    if (funct3 == `R_AS) begin
+        if (funct7 == `R_ADD) begin
+            ALU_func = `ADD;
+            end else begin
+            ALU_func = `SUB;
+        end
+        end else if (funct3 == `R_SLL) begin
+        ALU_func = `SLL;
+        end else if (funct3 == `R_SLT) begin
+        ALU_func = `SLT;
+        end else if (funct3 == `R_SLTU) begin
+        ALU_func = `SLTU;
+        end else if (funct3 == `R_XOR) begin
+        ALU_func = `XOR;
+        end else if (funct3 == `R_SR) begin
+        if (funct7 == `R_SRA) begin
+            ALU_func = `SRA;
+            end else begin
+            ALU_func = `SRL;
+        end
+        end else if (funct3 == `R_OR) begin
+        ALU_func = `OR;
+        end else if (funct3 == `R_AND) begin
+        ALU_func = `AND;
+        end else begin
+        reg_write_en = 0;
+        ALU_func     = 0;
+    end
+    end else if (opcode == `I_CSR) begin
+    jal     = 0;
+    jalr    = 0;
+    op1_src = 0;
+    op2_src = 0;
+    
+    br_type        = 0;
+    load_npc       = 0;
+    wb_select      = 0;
+    load_type      = 0;
+    reg_write_en   = 1;
+    cache_write_en = 0;
+    CSR_write_en   = 1;
+    imm_type       = `ITYPE;
+    case (funct3)
+        `I_CSRRW :begin
+            ALU_func        = `OP1;
+            CSR_zimm_or_reg = 0;
+        end
+        `I_CSRRS :begin
+            ALU_func        = `OR;
+            CSR_zimm_or_reg = 0;
+        end
+        `I_CSRRC :begin
+            ALU_func = `NAND;
+            CSR_zimm_or_reg = 0;
+        end
+        `I_CSRRWI :begin
+            ALU_func        = `OP1;
+            CSR_zimm_or_reg = 1;
+        end
+        `I_CSRRSI :begin
+            ALU_func        = `OR;
+            CSR_zimm_or_reg = 1;
+        end
+        `I_CSRRCI :begin
+            ALU_func        = `NAND;
+            CSR_zimm_or_reg = 1;
+        end
+        default: begin
+            ALU_func        = 0;    
+            CSR_zimm_or_reg = 0;
+        end
+    endcase
+    end else begin
+    jal             = 0;
+    jalr            = 0;
+    op1_src         = 0;
+    op2_src         = 0;
+    ALU_func        = 0;
+    br_type         = 0;
+    load_npc        = 0;
+    wb_select       = 0;
+    load_type       = 0;
+    reg_write_en    = 0;
+    cache_write_en  = 0;
+    imm_type        = 0;
+    CSR_write_en    = 0;
+    CSR_zimm_or_reg = 0;
 end
 end
 

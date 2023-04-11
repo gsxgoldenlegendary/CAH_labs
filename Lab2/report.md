@@ -37,3 +37,15 @@ S8: 改为有符号数比较
 Apr 11 09:14
 E9:前递失败
 S9:前两级bubble，exe flush
+
+Apr 11 11:56
+E10:宏定义使用报错
+S10:去掉define语句后的分号
+
+Apr 11 14:00
+E11:CSRRC无法操作
+S11:在ALU加入特殊操作
+
+Apr 11 14:14
+E12:CSRRS 读取错误
+S12:将CSR设为读优先
