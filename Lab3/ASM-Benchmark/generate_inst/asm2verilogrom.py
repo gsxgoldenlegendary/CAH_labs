@@ -1,8 +1,8 @@
 # -*- coding:utf-8 -*-
 # Python2 or Python3
-# Author : WangXuan
+# Author : WangXuan, Songxiao
 # 
-# 功能： 使用 Windows 版的 RISCV 工具链将汇编编译成 指令 Cache 的 Verilog 文件
+# 功能： 使用 Linux 版的 RISCV 工具链将汇编编译成 指令 Cache 的 Verilog 文件
 # 
 
 
@@ -44,7 +44,7 @@ verilog_tail = '''end
 endmodule
 '''
 
-RISCV_TOOLCHAIN_PATH = '.\\riscv32-gnu-toolchain-windows\\'
+RISCV_TOOLCHAIN_PATH = '/opt/riscv32/bin/'
 
 if len(sys.argv) != 3:
     print('    Usage:\n        python asm2verilog.py [INPUT ASM file] [OUTPUT Verilog file]')
@@ -53,16 +53,16 @@ else:
     INPUT  = sys.argv[1]
     OUTPUT = sys.argv[2]
 
-    res = os.system( '%sriscv32-elf-as %s            -o compile_tmp.o   -march=rv32i' % (RISCV_TOOLCHAIN_PATH, INPUT) )
+    res = os.system( '%sriscv32-unknown-elf-as %s            -o compile_tmp.o   -march=rv32i' % (RISCV_TOOLCHAIN_PATH, INPUT) )
     if res != 0:
         print('\n    Assembling Error!')
         sys.exit()
-    os.system( '%sriscv32-elf-ld compile_tmp.o -o compile_tmp.om'               % (RISCV_TOOLCHAIN_PATH       ) )
-    os.system( 'del compile_tmp.o'   )
-    os.system( '%sriscv32-elf-objcopy -O binary compile_tmp.om compile_tmp.bin' % (RISCV_TOOLCHAIN_PATH,      ) )
-    os.system( 'del compile_tmp.om'  )
+    os.system( '%sriscv32-unknown-elf-ld compile_tmp.o -o compile_tmp.om'               % (RISCV_TOOLCHAIN_PATH       ) )
+    os.system( 'rm compile_tmp.o'   )
+    os.system( '%sriscv32-unknown-elf-objcopy -O binary compile_tmp.om compile_tmp.bin' % (RISCV_TOOLCHAIN_PATH,      ) )
+    os.system( 'rm compile_tmp.om'  )
     s = binascii.b2a_hex( open('compile_tmp.bin', 'rb').read() )
-    os.system( 'del compile_tmp.bin' )
+    os.system( 'rm compile_tmp.bin' )
 
     def byte_wise_reverse(b):
         return b[6:8] + b[4:6] + b[2:4] + b[0:2]

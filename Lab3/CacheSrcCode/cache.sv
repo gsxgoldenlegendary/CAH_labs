@@ -1,6 +1,6 @@
 
-//`define FIFO
-`define LRU
+`define FIFO
+//`define LRU
 
 module cache #(
     parameter  LINE_ADDR_LEN = 3, // line内地址长度，决定了每个line具有2^3个word
@@ -63,8 +63,13 @@ end
 `ifdef FIFO
 reg [WAY_CNT-1:0] FIFO_swap_way=0;     // 用于记录要换出的line的way号
 `elsif LRU
-reg [WAY_CNT-1:0] LRU_swap_way[WAY_CNT];      // 用于记录要换出的line的way号
-reg [WAY_CNT-1:0] LRU_temp;
+reg [WAY_CNT-1:0] LRU_swap_way[WAY_CNT]; 
+initial begin
+    for(integer i=0;i<WAY_CNT;i=i+1) begin
+        LRU_swap_way[i] = i;
+    end
+end
+
 `endif
 
 always @ (posedge clk or posedge rst) begin    
@@ -96,7 +101,7 @@ always @ (posedge clk or posedge rst) begin
                                     `ifdef LRU
                                     for(integer j=0;j<WAY_CNT;j++) begin
                                        if(LRU_swap_way[j] == i) begin
-                                        for(integer k=j+1;k<WAY_CNT;k++)begin
+                                        for(integer k=j;k<WAY_CNT-1;k++)begin
                                             LRU_swap_way[k] <= LRU_swap_way[k+1];
                                         end
                                         LRU_swap_way[WAY_CNT-1] <= i;
@@ -161,11 +166,10 @@ always @ (posedge clk or posedge rst) begin
                         cache_tags[mem_rd_set_addr][LRU_swap_way[0]] <= mem_rd_tag_addr;
                         valid     [mem_rd_set_addr][LRU_swap_way[0]] <= 1'b1;
                         dirty     [mem_rd_set_addr][LRU_swap_way[0]] <= 1'b0;
-                        LRU_temp <= LRU_swap_way[0];
                         for(integer i=0;i<WAY_CNT-1;i++) begin
                             LRU_swap_way[i] <= LRU_swap_way[i+1];
                         end
-                        LRU_swap_way[WAY_CNT-1] <= LRU_temp;
+                        LRU_swap_way[WAY_CNT-1] <= LRU_swap_way[0];
                         `endif
                         cache_stat <= IDLE;        // 回到就绪状态
                     end
