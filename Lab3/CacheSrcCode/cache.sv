@@ -49,7 +49,14 @@ wire mem_gnt;      // 主存响应读写的握手信号
 
 assign {unused_addr, tag_addr, set_addr, line_addr, word_addr} = addr;  // 拆分 32bit ADDR
 
-reg [WAY_CNT-1:0]cache_hit=0;
+reg cache_hit[WAY_CNT];
+reg hit;
+initial begin
+    for(integer i=0;i<WAY_CNT;i++)begin
+        cache_hit[i] = 0;
+    end
+    hit = 0;
+end
 
 always @ (*) begin              // 判断 输入的address 是否在 cache 中命中
     for(integer i=0;i<WAY_CNT;i=i+1) begin
@@ -57,6 +64,15 @@ always @ (*) begin              // 判断 输入的address 是否在 cache 中�
             cache_hit[i] = 1'b1;
         else
             cache_hit[i] = 1'b0;
+    end
+    
+    for(integer i=0;i<WAY_CNT;i=i+1) begin
+        if(cache_hit[i]) begin
+            hit = 1'b1;
+            break;
+        end
+        else
+            hit = 1'b0;
     end
 end
 
@@ -96,7 +112,7 @@ always @ (posedge clk or posedge rst) begin
     end else begin
         case(cache_stat)
         IDLE:       begin
-                        if(cache_hit) begin
+                        if(hit) begin
                             for(integer i=0;i<WAY_CNT;i++) begin
                                 if(cache_hit[i]) begin
                                     if(rd_req) begin    // 如果cache命中，并且是读请求，
@@ -188,7 +204,7 @@ wire mem_rd_req = (cache_stat == SWAP_IN );
 wire mem_wr_req = (cache_stat == SWAP_OUT);
 wire [   MEM_ADDR_LEN-1 :0] mem_addr = mem_rd_req ? mem_rd_addr : ( mem_wr_req ? mem_wr_addr : 0);
 
-assign miss = (rd_req | wr_req) & ~(cache_hit!=0 && cache_stat==IDLE) ;     // 当 有读写请求时，如果cache不处于就绪(IDLE)状态，或者未命中，则miss=1
+assign miss = (rd_req | wr_req) & ~(hit && cache_stat==IDLE) ;     // 当 有读写请求时，如果cache不处于就绪(IDLE)状态，或者未命中，则miss=1
 
 main_mem #(     // 主存，每次读写以line 为单位
     .LINE_ADDR_LEN  ( LINE_ADDR_LEN          ),

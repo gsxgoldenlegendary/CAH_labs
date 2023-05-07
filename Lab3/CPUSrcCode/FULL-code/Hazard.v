@@ -117,7 +117,7 @@ module HarzardUnit(
             bubbleD = 0;
             flushD = 1;
             bubbleE = 0;
-            flushD = 1;
+            flushE = 1;
         end
         else 
         begin
@@ -188,6 +188,11 @@ module HarzardUnit(
         begin
             bubbleW = 0;
             flushW = 1;
+        end
+        else if(DCache_miss == 1)
+        begin
+            bubbleW = 1;
+            flushW = 0;
         end
         else 
         begin
