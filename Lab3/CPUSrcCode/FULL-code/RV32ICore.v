@@ -75,6 +75,7 @@ module RV32ICore(
     wire [31:0] ALU_op1, ALU_op2, ALU_out;
     wire [31:0] result, result_MEM;
     wire [1:0] op1_sel, op2_sel;
+    wire DCache_miss;
 
     wire [31:0] imm_EX;
     wire [31:0] reg1_forwarding, reg2_forwarding;
@@ -440,6 +441,7 @@ module RV32ICore(
 
     WB_Data_WB WB_Data_WB1(
         .clk(CPU_CLK),
+        .rst(CPU_RST),
         .bubbleW(bubbleW),
         .flushW(flushW),
         .wb_select(wb_select_MEM),
@@ -451,7 +453,8 @@ module RV32ICore(
         .in_data(reg2_MEM),
         .debug_in_data(CPU_Debug_DataCache_WD2),
         .debug_out_data(CPU_Debug_DataCache_RD2),
-        .data_WB(data_WB)
+        .data_WB(data_WB),
+        .miss(DCache_miss)
     );
 
 
@@ -509,7 +512,8 @@ module RV32ICore(
         .flushW(flushW),
         .bubbleW(bubbleW),
         .op1_sel(op1_sel),
-        .op2_sel(op2_sel)
+        .op2_sel(op2_sel),
+        .DCache_miss(DCache_miss)
     );  
     	         
 endmodule

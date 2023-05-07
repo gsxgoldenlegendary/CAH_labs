@@ -6,27 +6,27 @@
 _start:
 
 main:
-    xor    a3, zero, 0x100     # 指定排序问题的规模。0x100则代表要给0x100=256个数字进行快速排序。
+    xor    a3, zero, 0x10     #0 指定排序问题的规模。0x100则代表要给0x100=256个数字进行快速排序。
     
-    lui    sp, 0x00001         # 设置栈顶指针 sp=0x1000 
+    lui    sp, 0x00001         #1 设置栈顶指针 sp=0x1000 
     
-    xor    a0, zero, zero      # 准备函数参数，a0=0, 说明要排序的数组的RAM起始地址为0
-    xor    a1, zero, zero      # 准备函数参数，a1=0，说明从第0个字开始排序
-    addi   a2, a3  , -1
-    slli   a2, a2  , 2         # 准备函数参数，a2=数组最后一个元素的地址偏移。我们要排0x100=1024个数，最后一个数的地址为0x3fc
+    xor    a0, zero, zero      #2 准备函数参数，a0=0, 说明要排序的数组的RAM起始地址为0
+    xor    a1, zero, zero      #3 准备函数参数，a1=0，说明从第0个字开始排序
+    addi   a2, a3  , -1        #4
+    slli   a2, a2  , 2         #5 准备函数参数，a2=数组最后一个元素的地址偏移。我们要排0x100=1024个数，最后一个数的地址为0x3fc
     
-    jal    ra  , QuickSort     # 开始排序
+    jal    ra  , QuickSort     #6 开始排序
 
-    addi   t0, a3, 0
-    addi   t1, a0, 0
-    slli   t0, t0, 2
-    slli   t1, t1, 2
+    addi   t0, a3, 0            #7
+    addi   t1, a0, 0#8
+    slli   t0, t0, 2#9
+    slli   t1, t1, 2#10
 Loop:
-    lw     t2, (t1)
-    addi   t1, t1, 4
-    blt    t1, t0, Loop
+    lw     t2, (t1)#11
+    addi   t1, t1, 4#12
+    blt    t1, t0, Loop#13
 infinity_loop:
-    jal   zero, infinity_loop  # 排序结束，死循环
+    jal   zero, infinity_loop  #14 排序结束，死循环
 
 QuickSort:
     # 函数:QuickSort：以a0为基地址的原地升序快速排序，a1是start即开始下标，a2是end即结束下标
@@ -36,74 +36,74 @@ QuickSort:
     # 改变数据RAM： 除了被排序的数组外，还使用了以sp寄存器为栈顶指针的栈。使用栈的大小根据排序长度而不同，调用前合理设置sp的值以防爆栈
     # 改变的寄存器： t0, t1, t2, t3, t4
 
-        bge    a1, a2, QuickSortReturn                # if a1>=a2, end<=start, jump to return
-        or     t1, a1, zero                           # t1=i=a1=start
-        or     t2, a2, zero                           # t2=j=a2=end
-        add    t0, a0, t1                             # 
-        lw     t0, (t0)                               # t0=key=lst[start]
+        bge    a1, a2, QuickSortReturn                #15 if a1>=a2, end<=start, jump to return
+        or     t1, a1, zero                           #16 t1=i=a1=start
+        or     t2, a2, zero                           #17 t2=j=a2=end
+        add    t0, a0, t1                             #18 
+        lw     t0, (t0)                                 #19 t0=key=lst[start]
 
         PartationStart:          
             PartationFirstStart:                      # start of for loop
-                bge    t1, t2, PartationEnd           # if i>=j, branch to next step
-                add    t3, a0, t2                     # 
-                lw     t3, (t3)                       # t3=lst[j]
-                blt    t3, t0, PartationFirstEnd      # if lst[j]<key, branch to next step
-                addi   t2, t2, -4                     # t2-=4  j--
-                jal    zero, PartationFirstStart      # for loop
+                bge    t1, t2, PartationEnd           #20 if i>=j, branch to next step
+                add    t3, a0, t2                     #21 
+                lw     t3, (t3)                       #22 t3=lst[j]
+                blt    t3, t0, PartationFirstEnd      #23 if lst[j]<key, branch to next step
+                addi   t2, t2, -4                     #24 t2-=4  j--
+                jal    zero, PartationFirstStart      #25 for loop
             PartationFirstEnd:                        # end of for loop
-            add    t4  , a0, t1                       # t4=lst+i
-            sw     t3  , (t4)                         # lst[i] = t3 = lst[j]
+            add    t4  , a0, t1                       #26 t4=lst+i
+            sw     t3  , (t4)                         #27 lst[i] = t3 = lst[j]
             
             PartationSecondStart:                     # start of for loop
-                bge    t1, t2, PartationEnd           # if i>=j, branch to next step
-                add    t3, a0, t1                     # 
-                lw     t3, (t3)                       # t3=lst[i]
-                blt    t0, t3, PartationSecondEnd     # if key<lst[i], branch to next step
-                addi   t1, t1, 4                      # t1+=4  i++
-                jal    zero, PartationSecondStart     # for loop
+                bge    t1, t2, PartationEnd           #28 if i>=j, branch to next step
+                add    t3, a0, t1                     #29 
+                lw     t3, (t3)                       #30 t3=lst[i]
+                blt    t0, t3, PartationSecondEnd     #31 if key<lst[i], branch to next step
+                addi   t1, t1, 4                      #32 t1+=4  i++
+                jal    zero, PartationSecondStart     #33 for loop
             PartationSecondEnd:                       # end of for loop 
-            add    t4  , a0, t2                       # t4=lst+j
-            sw     t3  , (t4)                         # lst[j] = t3 = lst[i]
+            add    t4  , a0, t2                       #34 t4=lst+j
+            sw     t3  , (t4)                         #35 lst[j] = t3 = lst[i]
             
-            blt    t1, t2, PartationStart             # if t1<t2, branch to while start
+            blt    t1, t2, PartationStart             #36 if t1<t2, branch to while start
         PartationEnd:
 
-        add    t4  , a0, t1                           # t4=lst+i
-        sw     t0  , (t4)                             # lst[i] = t0 = key
+        add    t4  , a0, t1                           #37 t4=lst+i
+        sw     t0  , (t4)                             #38 lst[i] = t0 = key
         
-        addi   sp, sp, -4                              # sp-=4        
-        sw     ra, (sp)                                # mem[sp] = ra # push ra to stack
-        addi   sp, sp, -4                              # sp-=4
-        sw     a1, (sp)                                # mem[sp] = a1 # push a1 to stack, save start
-        addi   sp, sp, -4                              # sp-=4        
-        sw     a2, (sp)                                # mem[sp] = a2 # push a2 to stack, save end
-        addi   sp, sp, -4                              # sp-=4        
-        sw     t1, (sp)                                # mem[sp] = t1 # push t1 to stack, save i
-        addi   a2, t1, -4                              # a2 = i-4, a parameter for recursive call
+        addi   sp, sp, -4                              #39 sp-=4        
+        sw     ra, (sp)                                #40 mem[sp] = ra # push ra to stack
+        addi   sp, sp, -4                              #41 sp-=4
+        sw     a1, (sp)                                #42 mem[sp] = a1 # push a1 to stack, save start
+        addi   sp, sp, -4                              #43 sp-=4        
+        sw     a2, (sp)                                #44 mem[sp] = a2 # push a2 to stack, save end
+        addi   sp, sp, -4                              #45 sp-=4        
+        sw     t1, (sp)                                #46 mem[sp] = t1 # push t1 to stack, save i
+        addi   a2, t1, -4                              #47 a2 = i-4, a parameter for recursive call
         jal    ra  , QuickSort
-        lw     t1, (sp)                                # pop i form stack 
-        addi   sp, sp,  4                              # sp+=4
-        lw     a2, (sp)                                # pop end form stack 
-        addi   sp, sp,  4                              # sp+=4
-        lw     a1, (sp)                                # pop start form stack 
+        lw     t1, (sp)                                #49 pop i form stack 
+        addi   sp, sp,  4                              #50 sp+=4
+        lw     a2, (sp)                                #51 pop end form stack 
+        addi   sp, sp,  4                              #52 sp+=4
+        lw     a1, (sp)                                #53 pop start form stack 
 
-        addi   sp, sp, -4                              # sp-=4        
-        sw     a2, (sp)                                # mem[sp] = a2 # push a2 to stack, save end
-        addi   sp, sp, -4                              # sp-=4        
-        sw     t1, (sp)                                # mem[sp] = t1 # push t1 to stack, save i
-        addi   a1, t1, 4                               # a1 = i+4, a parameter for recursive call
+        addi   sp, sp, -4                              #54 sp-=4        
+        sw     a2, (sp)                                #55 mem[sp] = a2 # push a2 to stack, save end
+        addi   sp, sp, -4                              #56 sp-=4        
+        sw     t1, (sp)                                #57 mem[sp] = t1 # push t1 to stack, save i
+        addi   a1, t1, 4                               #58 a1 = i+4, a parameter for recursive call
         jal    ra  , QuickSort
-        lw     t1, (sp)                                # pop i form stack 
-        addi   sp, sp,  4                              # sp+=4
-        lw     a2, (sp)                                # pop end form stack 
-        addi   sp, sp,  4                              # sp+=4
-        lw     a1, (sp)                                # pop start form stack 
-        addi   sp, sp,  4                              # sp+=4
-        lw     ra, (sp)                                # pop ra form stack 
-        addi   sp, sp,  4                              # sp+=4
+        lw     t1, (sp)                                #60 pop i form stack 
+        addi   sp, sp,  4                              #61 sp+=4
+        lw     a2, (sp)                                #62 pop end form stack 
+        addi   sp, sp,  4                              #63 sp+=4
+        lw     a1, (sp)                                #64 pop start form stack 
+        addi   sp, sp,  4                              #65 sp+=4
+        lw     ra, (sp)                                #66 pop ra form stack 
+        addi   sp, sp,  4                              #67 sp+=4
 
     QuickSortReturn:                                   # 函数结尾
-        jalr   zero, ra, 0                             # 返回
+        jalr   zero, ra, 0                             #68 返回
 
         
 

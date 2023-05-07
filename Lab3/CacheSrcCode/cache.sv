@@ -61,12 +61,19 @@ always @ (*) begin              // 判断 输入的address 是否在 cache 中�
 end
 
 `ifdef FIFO
-reg [WAY_CNT-1:0] FIFO_swap_way=0;     // 用于记录要换出的line的way号
-`elsif LRU
-reg [WAY_CNT-1:0] LRU_swap_way[WAY_CNT]; 
+reg [WAY_CNT-1:0] FIFO_swap_way[SET_SIZE];     // 用于记录要换出的line的way号
 initial begin
-    for(integer i=0;i<WAY_CNT;i=i+1) begin
-        LRU_swap_way[i] = i;
+    for(integer i=0;i<SET_SIZE;i=i+1) begin
+        FIFO_swap_way[i] = 0;
+    end
+end
+`elsif LRU
+reg [WAY_CNT-1:0] LRU_swap_way[SET_SIZE][WAY_CNT]; 
+initial begin
+    for(integer j=0;j<SET_SIZE;j=j+1)begin
+        for(integer i=0;i<WAY_CNT;i=i+1) begin
+            LRU_swap_way[j][i] = i;
+        end
     end
 end
 
@@ -100,11 +107,11 @@ always @ (posedge clk or posedge rst) begin
                                     end 
                                     `ifdef LRU
                                     for(integer j=0;j<WAY_CNT;j++) begin
-                                       if(LRU_swap_way[j] == i) begin
+                                       if(LRU_swap_way[set_addr][j] == i) begin
                                         for(integer k=j;k<WAY_CNT-1;k++)begin
-                                            LRU_swap_way[k] <= LRU_swap_way[k+1];
+                                            LRU_swap_way[set_addr][k] <= LRU_swap_way[set_addr][k+1];
                                         end
-                                        LRU_swap_way[WAY_CNT-1] <= i;
+                                        LRU_swap_way[set_addr][WAY_CNT-1] <= i;
                                         break;
                                        end
                                     end
@@ -115,18 +122,18 @@ always @ (posedge clk or posedge rst) begin
                         end else begin
                             if(wr_req | rd_req) begin   // 如果 cache 未命中，并且有读写请求，则需要进行换入
                                 `ifdef FIFO
-                                if(valid[set_addr][FIFO_swap_way] & dirty[set_addr][FIFO_swap_way]) begin    // 如果 要换入的cache line 本来有效，且脏，则需要先将它换出
+                                if(valid[set_addr][FIFO_swap_way[set_addr]] & dirty[set_addr][FIFO_swap_way[set_addr]]) begin    // 如果 要换入的cache line 本来有效，且脏，则需要先将它换出
                                     cache_stat  <= SWAP_OUT;
-                                    mem_wr_addr <= {cache_tags[set_addr][FIFO_swap_way], set_addr};
-                                    mem_wr_line <= cache_mem[set_addr][FIFO_swap_way];
+                                    mem_wr_addr <= {cache_tags[set_addr][FIFO_swap_way[set_addr]], set_addr};
+                                    mem_wr_line <= cache_mem[set_addr][FIFO_swap_way[set_addr]];
                                 end else begin                                   // 反之，不需要换出，直接换入
                                     cache_stat  <= SWAP_IN;
                                 end
                                 `elsif LRU
-                                if(valid[set_addr][LRU_swap_way[0]] & dirty[set_addr][LRU_swap_way[0]]) begin    // 如果 要换入的cache line 本来有效，且脏，则需要先将它换出
+                                if(valid[set_addr][LRU_swap_way[set_addr][0]] & dirty[set_addr][LRU_swap_way[set_addr][0]]) begin    // 如果 要换入的cache line 本来有效，且脏，则需要先将它换出
                                     cache_stat  <= SWAP_OUT;
-                                    mem_wr_addr <= {cache_tags[set_addr][LRU_swap_way[0]], set_addr};
-                                    mem_wr_line <= cache_mem[set_addr][LRU_swap_way[0]];
+                                    mem_wr_addr <= {cache_tags[set_addr][LRU_swap_way[set_addr][0]], set_addr};
+                                    mem_wr_line <= cache_mem[set_addr][LRU_swap_way[set_addr][0]];
                                 end else begin                                   // 反之，不需要换出，直接换入
                                     cache_stat  <= SWAP_IN;
                                 end
@@ -148,28 +155,28 @@ always @ (posedge clk or posedge rst) begin
         SWAP_IN_OK: begin           // 上一个周期换入成功，这周期将主存读出的line写入cache，并更新tag，置高valid，置低dirty
                         `ifdef FIFO
                         for(integer i=0; i<LINE_SIZE; i++)  begin
-                            cache_mem[mem_rd_set_addr][FIFO_swap_way][i] <= mem_rd_line[i];
+                            cache_mem[mem_rd_set_addr][FIFO_swap_way[mem_rd_set_addr]][i] <= mem_rd_line[i];
                         end
-                        cache_tags[mem_rd_set_addr][FIFO_swap_way] <= mem_rd_tag_addr;
-                        valid     [mem_rd_set_addr][FIFO_swap_way] <= 1'b1;
-                        dirty     [mem_rd_set_addr][FIFO_swap_way] <= 1'b0;
+                        cache_tags[mem_rd_set_addr][FIFO_swap_way[mem_rd_set_addr]] <= mem_rd_tag_addr;
+                        valid     [mem_rd_set_addr][FIFO_swap_way[mem_rd_set_addr]] <= 1'b1;
+                        dirty     [mem_rd_set_addr][FIFO_swap_way[mem_rd_set_addr]] <= 1'b0;
                         
-                        if(FIFO_swap_way == WAY_CNT-1) begin
-                            FIFO_swap_way <= 0;
+                        if(FIFO_swap_way[mem_rd_set_addr] == WAY_CNT-1) begin
+                            FIFO_swap_way[mem_rd_set_addr] <= 0;
                         end else begin
-                            FIFO_swap_way <= FIFO_swap_way + 1;
+                            FIFO_swap_way[mem_rd_set_addr] <= FIFO_swap_way[mem_rd_set_addr] + 1;
                         end
                         `elsif LRU
                         for(integer i=0; i<LINE_SIZE; i++)  begin
-                            cache_mem[mem_rd_set_addr][LRU_swap_way[0]][i] <= mem_rd_line[i];
+                            cache_mem[mem_rd_set_addr][LRU_swap_way[set_addr][0]][i] <= mem_rd_line[i];
                         end
-                        cache_tags[mem_rd_set_addr][LRU_swap_way[0]] <= mem_rd_tag_addr;
-                        valid     [mem_rd_set_addr][LRU_swap_way[0]] <= 1'b1;
-                        dirty     [mem_rd_set_addr][LRU_swap_way[0]] <= 1'b0;
+                        cache_tags[mem_rd_set_addr][LRU_swap_way[set_addr][0]] <= mem_rd_tag_addr;
+                        valid     [mem_rd_set_addr][LRU_swap_way[set_addr][0]] <= 1'b1;
+                        dirty     [mem_rd_set_addr][LRU_swap_way[set_addr][0]] <= 1'b0;
                         for(integer i=0;i<WAY_CNT-1;i++) begin
-                            LRU_swap_way[i] <= LRU_swap_way[i+1];
+                            LRU_swap_way[set_addr][i] <= LRU_swap_way[set_addr][i+1];
                         end
-                        LRU_swap_way[WAY_CNT-1] <= LRU_swap_way[0];
+                        LRU_swap_way[set_addr][WAY_CNT-1] <= LRU_swap_way[set_addr][0];
                         `endif
                         cache_stat <= IDLE;        // 回到就绪状态
                     end

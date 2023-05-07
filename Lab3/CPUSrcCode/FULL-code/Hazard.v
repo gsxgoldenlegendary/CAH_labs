@@ -41,6 +41,7 @@ module HarzardUnit(
     input wire wb_select,
     input wire reg_write_en_MEM,
     input wire reg_write_en_WB,
+    input wire DCache_miss,
     output reg flushF, bubbleF, flushD, bubbleD, flushE, bubbleE, flushM, bubbleM, flushW, bubbleW,
     output reg [1:0] op1_sel, op2_sel
     );
@@ -74,6 +75,11 @@ module HarzardUnit(
         begin
             bubbleM = 0;
             flushM = 1;
+        end
+        else if(DCache_miss == 1)
+        begin
+            bubbleM = 1;
+            flushM = 0;
         end
         else 
         begin
@@ -115,7 +121,16 @@ module HarzardUnit(
         end
         else 
         begin
-            if (wb_select == 1 && (reg_dstE == reg1_srcD || reg_dstE == reg2_srcD))
+            if (DCache_miss == 1)
+            begin
+                bubbleF = 1;
+                flushF = 0;
+                bubbleD = 1;
+                flushD = 0;
+                bubbleE = 1;
+                flushE = 0;
+            end
+            else if (wb_select == 1 && (reg_dstE == reg1_srcD || reg_dstE == reg2_srcD))
             begin
                 // load-use type data hazard, bubble IF, bubble ID, flush EX 
                 bubbleF = 1;
