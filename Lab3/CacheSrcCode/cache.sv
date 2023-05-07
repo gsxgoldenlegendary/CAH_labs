@@ -17,6 +17,11 @@ module cache #(
     input  [31:0] wr_data      // 要写入的数据，一次写一个word
 );
 
+integer hit_cnt = 0;
+integer miss_cnt = 0;
+integer total_cnt = 0;
+
+
 localparam MEM_ADDR_LEN    = TAG_ADDR_LEN + SET_ADDR_LEN ; // 计算主存地址长度 MEM_ADDR_LEN，主存大小=2^MEM_ADDR_LEN个line
 localparam UNUSED_ADDR_LEN = 32 - TAG_ADDR_LEN - SET_ADDR_LEN - LINE_ADDR_LEN - 2 ;       // 计算未使用的地址的长度
 
@@ -113,6 +118,8 @@ always @ (posedge clk or posedge rst) begin
         case(cache_stat)
         IDLE:       begin
                         if(hit) begin
+                            hit_cnt++;
+                            total_cnt++;
                             for(integer i=0;i<WAY_CNT;i++) begin
                                 if(cache_hit[i]) begin
                                     if(rd_req) begin    // 如果cache命中，并且是读请求，
@@ -136,6 +143,8 @@ always @ (posedge clk or posedge rst) begin
                                 end
                             end
                         end else begin
+                            miss_cnt++;
+                            total_cnt++;
                             if(wr_req | rd_req) begin   // 如果 cache 未命中，并且有读写请求，则需要进行换入
                                 `ifdef FIFO
                                 if(valid[set_addr][FIFO_swap_way[set_addr]] & dirty[set_addr][FIFO_swap_way[set_addr]]) begin    // 如果 要换入的cache line 本来有效，且脏，则需要先将它换出
