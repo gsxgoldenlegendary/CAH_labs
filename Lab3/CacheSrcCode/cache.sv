@@ -1,12 +1,12 @@
 
-`define FIFO
-//`define LRU
+//`define FIFO
+`define LRU
 
 module cache #(
-    parameter  LINE_ADDR_LEN = 3, // line内地址长度，决定了每个line具有2^3个word
-    parameter  SET_ADDR_LEN  = 3, // 组地址长度，决定了一共有2^3=8组
-    parameter  TAG_ADDR_LEN  = 6, // tag长度
-    parameter  WAY_CNT       = 3  // 组相连度，决定了每组中有多少路line，这里是直接映射型cache，因此该参数没用到
+    parameter  LINE_ADDR_LEN = 5, // line内地址长度，决定了每个line具有2^3个word
+    parameter  SET_ADDR_LEN  = 2, // 组地址长度，决定了一共有2^3=8组
+    parameter  TAG_ADDR_LEN  = 8, // tag长度
+    parameter  WAY_CNT       = 1  // 组相连度，决定了每组中有多少路line，这里是直接映射型cache，因此该参数没用到
 )(
     input  clk, rst,
     output miss,               // 对CPU发出的miss信号
@@ -118,34 +118,46 @@ always @ (posedge clk or posedge rst) begin
         case(cache_stat)
         IDLE:       begin
                         if(hit) begin
-                            hit_cnt++;
-                            total_cnt++;
                             for(integer i=0;i<WAY_CNT;i++) begin
                                 if(cache_hit[i]) begin
                                     if(rd_req) begin    // 如果cache命中，并且是读请求，
+                                        hit_cnt++;
+                                        total_cnt++;
                                         rd_data <= cache_mem[set_addr][i][line_addr];   //则直接从cache中取出要读的数据
+                                        `ifdef LRU
+                                        for(integer j=0;j<WAY_CNT;j++) begin
+                                            if(LRU_swap_way[set_addr][j] == i) begin
+                                                for(integer k=j;k<WAY_CNT-1;k++)begin
+                                                    LRU_swap_way[set_addr][k] <= LRU_swap_way[set_addr][k+1];
+                                                end
+                                                LRU_swap_way[set_addr][WAY_CNT-1] <= i;
+                                                break;
+                                            end
+                                        end
+                                        `endif
                                     end else if(wr_req) begin // 如果cache命中，并且是写请求，
+                                        hit_cnt++;
+                                        total_cnt++;
                                         cache_mem[set_addr][i][line_addr] <= wr_data;   // 则直接向cache中写入数据
                                         dirty[set_addr][i] <= 1'b1;                     // 写数据的同时置脏位
-                                    end 
-                                    `ifdef LRU
-                                    for(integer j=0;j<WAY_CNT;j++) begin
-                                       if(LRU_swap_way[set_addr][j] == i) begin
-                                        for(integer k=j;k<WAY_CNT-1;k++)begin
-                                            LRU_swap_way[set_addr][k] <= LRU_swap_way[set_addr][k+1];
+                                        `ifdef LRU
+                                        for(integer j=0;j<WAY_CNT;j++) begin
+                                            if(LRU_swap_way[set_addr][j] == i) begin
+                                                for(integer k=j;k<WAY_CNT-1;k++)begin
+                                                    LRU_swap_way[set_addr][k] <= LRU_swap_way[set_addr][k+1];
+                                                end
+                                                LRU_swap_way[set_addr][WAY_CNT-1] <= i;
+                                                break;
+                                            end
                                         end
-                                        LRU_swap_way[set_addr][WAY_CNT-1] <= i;
-                                        break;
-                                       end
+                                        `endif
                                     end
-                                    `endif
-                                break;
+                                    break;
                                 end
                             end
                         end else begin
-                            miss_cnt++;
-                            total_cnt++;
                             if(wr_req | rd_req) begin   // 如果 cache 未命中，并且有读写请求，则需要进行换入
+                            total_cnt++;
                                 `ifdef FIFO
                                 if(valid[set_addr][FIFO_swap_way[set_addr]] & dirty[set_addr][FIFO_swap_way[set_addr]]) begin    // 如果 要换入的cache line 本来有效，且脏，则需要先将它换出
                                     cache_stat  <= SWAP_OUT;

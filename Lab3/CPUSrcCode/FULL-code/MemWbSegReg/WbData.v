@@ -49,8 +49,8 @@ module WB_Data_WB(
     //     .debug_out_data(debug_out_data)
     // );
     cache #(
-        .LINE_ADDR_LEN(3),
-        .SET_ADDR_LEN(1),
+        .LINE_ADDR_LEN(5),
+        .SET_ADDR_LEN(2),
         .TAG_ADDR_LEN(8),
         .WAY_CNT(1)
     )DataCache(
