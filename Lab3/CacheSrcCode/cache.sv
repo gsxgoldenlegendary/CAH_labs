@@ -1,6 +1,6 @@
 
-//`define FIFO
-`define LRU
+`define FIFO
+//`define LRU
 
 module cache #(
     parameter  LINE_ADDR_LEN = 5, // line内地址长度，决定了每个line具有2^3个word
