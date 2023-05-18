@@ -34,6 +34,8 @@ module NPC_Generator(
     output reg [31:0] NPC,
     output reg pre_fail
     );
+
+
 `ifdef BTB
     wire [31:0]PC_IF;
     assign PC_IF = PC - 4;
@@ -52,6 +54,8 @@ module NPC_Generator(
         if(reset) begin
             total <= 0;
             success <= 0;
+            NPC <= 0;
+            pre_fail <= 0;
         end
         else if(is_br_EX && !bubbleE) begin
             total <= total + 1;
