@@ -182,7 +182,11 @@ module RV32ICore(
         .jal(jal),
         .jalr(jalr_EX),
         .br(br),
-        .NPC(NPC)
+        .NPC(NPC),
+        .PC_EX(PC_EX),
+        .clk(CPU_CLK),
+        .reset(CPU_Reset),
+        .is_branch(|br_type_EX)
     );
 
 
