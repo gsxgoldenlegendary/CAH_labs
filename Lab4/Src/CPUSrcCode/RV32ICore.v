@@ -173,7 +173,8 @@ module RV32ICore(
     // PC-Generator
     // ---------------------------------------------
 
-
+    wire pre_fail;
+    wire [31:0] NPC_EX;
     NPC_Generator NPC_Generator1(
         .PC(PC_4),
         .jal_target(jal_target),
@@ -183,10 +184,12 @@ module RV32ICore(
         .jalr(jalr_EX),
         .br(br),
         .NPC(NPC),
-        .PC_EX(PC_EX),
+        .PC_EX(PC_EX - 4),
         .clk(CPU_CLK),
         .reset(CPU_Reset),
-        .is_branch(|br_type_EX)
+        .bubbleE(bubbleE),
+        .NPC_EX(NPC_EX),
+        .pre_fail(pre_fail)
     );
 
 
@@ -203,13 +206,15 @@ module RV32ICore(
     // ---------------------------------------------
     // IF stage
     // ---------------------------------------------
-
+    wire [31:0] NPC_ID;
     PC_ID PC_ID1(
         .clk(CPU_CLK),
         .bubbleD(bubbleD),
         .flushD(flushD),
         .PC_IF(PC_4),
-        .PC_ID(PC_ID)
+        .PC_ID(PC_ID),
+        .NPC_IF(NPC),
+        .NPC_ID(NPC_ID)
     );
 
 
@@ -289,7 +294,9 @@ module RV32ICore(
         .bubbleE(bubbleE),
         .flushE(flushE),
         .PC_ID(PC_ID),
-        .PC_EX(PC_EX)
+        .PC_EX(PC_EX),
+        .NPC_ID(NPC_ID),
+        .NPC_EX(NPC_EX)
     );
 
     BR_Target_EX BR_Target_EX1(
@@ -499,7 +506,7 @@ module RV32ICore(
         .reg_dstE(reg_dest_EX),
         .reg_dstM(reg_dest_MEM),
         .reg_dstW(reg_dest_WB),
-        .br(br),
+        .br(pre_fail),
         .jalr(jalr_EX),
         .jal(jal),
         .wb_select(wb_select_EX),

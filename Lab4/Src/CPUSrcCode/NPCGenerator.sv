@@ -14,75 +14,155 @@
     // NPC               下一条执行的指令地址
 // 实验要求  
     // 实现NPC_Generator
-`define BTB
-`define JAL 1
-`define JALR 2
-`define BRANCH 3
 
-`ifdef BTB
-    `define BRANCH_PC 64:33
-    `define PREDICTED_PC 32:1
-    `define STATE_BIT 0:0
-`endif 
-//`define BHT
+//`define BTB
+`define BHT
+
+`ifdef BHT
+    `define BTB
+`endif
+
+`define TAG_POSITION 31:BTB_BANK_WIDTH
+`define INDEX_POSITION BTB_BANK_WIDTH-1:0
+
 module NPC_Generator(
-    input clk, reset,is_branch,
-    input wire [31:0] PC, jal_target, jalr_target, br_target,PC_EX,
+    input clk, 
+    input is_br_EX, reset, bubbleE,
+    input wire [31:0] PC, jal_target, jalr_target, br_target,
+    input wire [31:0] PC_EX, NPC_EX,
     input wire jal, jalr, br,
-    output reg [31:0] NPC
+    output reg [31:0] NPC,
+    output reg pre_fail
     );
-
-    // TODO: Complete this module
-
-
-
 `ifdef BTB
-wire[31:0] PC_Predicted;
-localparam BP_BITS = 5;
-localparam BP_SIZE = (1 << BP_BITS) - 1;
-reg[64:0] bank[BP_SIZE];
+    wire [31:0]PC_IF;
+    assign PC_IF = PC - 4;
+    localparam  BTB_BANK = 64;
+    localparam  BTB_BANK_WIDTH = $clog2(BTB_BANK);
+    localparam  BTB_TAG_WIDTH = 32 - BTB_BANK_WIDTH;
 
-assign PC_Predicted = (bank[PC[BP_BITS:0]][`STATE_BIT] == 1)?
-                            (bank[PC[BP_BITS:0]][`BRANCH_PC] == PC?
-                            bank[PC[BP_BITS:0]][`PREDICTED_PC]
-                            :PC)
-                        :PC;
-
-always @ (*)
-begin
-    if (br == 1)
-    begin 
-        NPC = br_target;
-    end
-    else if (jalr == 1)
-    begin
-        NPC = jalr_target;
-    end
-    else if (jal == 1)
-    begin
-        NPC = jal_target;
-    end
-    else 
-    begin
-        NPC = PC_Predicted;
-    end
-end
-
-always @(posedge clk) begin
-    if(reset)begin
-        for (integer i=0;i<BP_SIZE;i++)begin
-            bank[i]<=0;
+    reg [31:0]              btb_predict_pc [BTB_BANK];
+    reg [BTB_TAG_WIDTH-1:0] btb_branch_tag [BTB_BANK];
+    reg                     btb_valid [BTB_BANK];
+    reg                     btb_history [BTB_BANK];
+    reg [BTB_BANK-1:0] total;
+    reg [BTB_BANK-1:0] success;
+    
+    always @(posedge clk) begin
+        if(reset) begin
+            total <= 0;
+            success <= 0;
+        end
+        else if(is_br_EX && !bubbleE) begin
+            total <= total + 1;
+            if(!pre_fail) 
+                success <= success + 1;
         end
     end
-    else if(is_branch)begin
-        bank[PC_EX[BP_BITS:0]][`STATE_BIT]<=br;
-        bank[PC_EX[BP_BITS:0]][`BRANCH_PC]<=PC_EX;
-        bank[PC_EX[BP_BITS:0]][`PREDICTED_PC]<=br_target;
+
+    wire [`INDEX_POSITION] btb_index_read, btb_index_write;
+    wire [BTB_TAG_WIDTH-1:0] btb_tag_read, btb_tag_write;
+    wire btb_hit_read;
+
+    always @(*) begin
+        if(is_br_EX) begin
+            if(br) begin
+                pre_fail = NPC_EX != br_target;
+            end
+            else begin
+                pre_fail = NPC_EX != PC_EX + 4;
+            end
+        end
+        else begin
+            pre_fail = 0;
+        end
     end
-end
-`endif 
-`ifdef BHT
 
+    assign btb_index_read = PC_IF[`INDEX_POSITION];
+    assign btb_tag_read = PC_IF[`TAG_POSITION];
+    assign btb_hit_read = btb_valid[btb_index_read] && (btb_branch_tag[btb_index_read] == btb_tag_read);
 
+    assign btb_index_write = PC_EX[`INDEX_POSITION];
+    assign btb_tag_write = PC_EX[31:BTB_BANK_WIDTH];
+
+    always @(posedge clk) begin
+        if(reset) begin
+            for (integer i = 0; i < BTB_BANK; i++) begin
+                btb_valid[i]        = 0;
+                btb_branch_tag[i]   = 0;
+                btb_predict_pc[i]   = 0;
+                btb_history[i]      = 0;
+            end
+        end
+        else if(is_br_EX) begin
+            btb_branch_tag[btb_index_write]     <= btb_tag_write;
+            btb_predict_pc[btb_index_write]     <= br_target;
+            btb_valid[btb_index_write]          <= 1'b1;
+            btb_history[btb_index_write]        <= br;
+        end
+    end
 `endif
+`ifdef BHT
+    localparam  BHT_BANK = 4096;
+    localparam  BHT_BANK_WIDTH = $clog2(BHT_BANK);
+    localparam  BHT_TAG_WIDTH = 32 - BHT_BANK_WIDTH;
+
+    reg [1:0] bht_state [BHT_BANK];
+    wire [BHT_BANK_WIDTH-1:0] bht_index_read, bht_index_write;
+    wire bht_hit;
+    assign bht_index_read = PC_IF[BHT_BANK_WIDTH-1:0];
+    assign bht_index_write = PC_EX[BHT_BANK_WIDTH-1:0];
+    assign bht_hit = bht_state[bht_index_read][1];
+    
+    always @(posedge clk) begin
+        if(reset) begin
+            for (integer i = 0; i < BHT_BANK; i++) begin
+                bht_state[i] <= 0;
+            end
+        end
+        else if(is_br_EX) begin
+            if(br) 
+                bht_state[bht_index_write] <= bht_state[bht_index_write] == 3 ? 
+                    3 : 
+                    bht_state[bht_index_write] + 1;
+            else 
+                bht_state[bht_index_write] <= bht_state[bht_index_write] == 0 ?
+                    0 : 
+                    bht_state[bht_index_write] - 1; 
+        end
+    end
+`endif
+ always @(*) begin
+`ifdef BTB
+        if(pre_fail) begin
+            if(br) 
+                NPC = br_target;
+            else 
+                NPC = PC_EX + 4;
+        end
+`elsif
+         if (br)
+        begin
+            NPC = br_target;
+        end
+`endif
+        else if(jalr) begin
+            NPC = jalr_target;
+        end
+        else if(jal) begin
+            NPC = jal_target;
+        end
+`ifdef BTB
+        else if(btb_hit_read && btb_history[btb_index_read]
+    `ifdef BHT
+        && bht_hit
+    `endif
+        ) begin
+            NPC = btb_predict_pc[btb_index_read];
+        end
+`endif
+        else begin
+            NPC = PC;
+        end
+    end
 endmodule

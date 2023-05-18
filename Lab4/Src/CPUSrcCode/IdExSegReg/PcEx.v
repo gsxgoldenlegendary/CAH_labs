@@ -13,8 +13,8 @@
 
 module PC_EX(
     input wire clk, bubbleE, flushE,
-    input wire [31:0] PC_ID,
-    output reg [31:0] PC_EX
+    input wire [31:0] PC_ID,NPC_ID,
+    output reg [31:0] PC_EX,NPC_EX
     );
 
     initial PC_EX = 0;
@@ -22,10 +22,13 @@ module PC_EX(
     always@(posedge clk)
         if (!bubbleE) 
         begin
-            if (flushE)
+            if (flushE)begin
                 PC_EX <= 0;
-            else 
+                NPC_EX <= 0;    
+            end else begin 
                 PC_EX <= PC_ID;
+                NPC_EX <= NPC_ID;
+            end
         end
     
 endmodule
