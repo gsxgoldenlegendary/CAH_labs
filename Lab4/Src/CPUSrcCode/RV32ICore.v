@@ -186,10 +186,11 @@ module RV32ICore(
         .NPC(NPC),
         .PC_EX(PC_EX - 4),
         .clk(CPU_CLK),
-        .reset(CPU_Reset),
+        .reset(CPU_RST),
         .bubbleE(bubbleE),
         .NPC_EX(NPC_EX),
-        .pre_fail(pre_fail)
+        .pre_fail(pre_fail),
+        .is_br_EX(|br_type_EX)
     );
 
 

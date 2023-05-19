@@ -37,7 +37,7 @@
 module HarzardUnit(
     input wire rst,
     input wire [4:0] reg1_srcD, reg2_srcD, reg1_srcE, reg2_srcE, reg_dstE, reg_dstM, reg_dstW,
-    input wire br, jalr, jal,
+    input wire br, jalr, jal,pre_fail,
     input wire wb_select,
     input wire reg_write_en_MEM,
     input wire reg_write_en_WB,

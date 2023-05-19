@@ -15,8 +15,8 @@
 // 实验要求  
     // 实现NPC_Generator
 
-//`define BTB
-`define BHT
+`define BTB
+//`define BHT
 
 `ifdef BHT
     `define BTB
@@ -66,7 +66,7 @@ module NPC_Generator(
 
     wire [`INDEX_POSITION] btb_index_read, btb_index_write;
     wire [BTB_TAG_WIDTH-1:0] btb_tag_read, btb_tag_write;
-    wire btb_hit_read;
+    wire btb_hit;
 
     always @(*) begin
         if(is_br_EX) begin
@@ -84,7 +84,7 @@ module NPC_Generator(
 
     assign btb_index_read = PC_IF[`INDEX_POSITION];
     assign btb_tag_read = PC_IF[`TAG_POSITION];
-    assign btb_hit_read = btb_valid[btb_index_read] && (btb_branch_tag[btb_index_read] == btb_tag_read);
+    assign btb_hit = btb_valid[btb_index_read] && (btb_branch_tag[btb_index_read] == btb_tag_read);
 
     assign btb_index_write = PC_EX[`INDEX_POSITION];
     assign btb_tag_write = PC_EX[31:BTB_BANK_WIDTH];
@@ -99,15 +99,17 @@ module NPC_Generator(
             end
         end
         else if(is_br_EX) begin
+`ifndef BHT
             btb_branch_tag[btb_index_write]     <= btb_tag_write;
             btb_predict_pc[btb_index_write]     <= br_target;
             btb_valid[btb_index_write]          <= 1'b1;
-            btb_history[btb_index_write]        <= br;
+            btb_history[btb_index_write]        <= br;//0
+`endif   
         end
     end
 `endif
 `ifdef BHT
-    localparam  BHT_BANK = 4096;
+    localparam  BHT_BANK = 64;//4096
     localparam  BHT_BANK_WIDTH = $clog2(BHT_BANK);
     localparam  BHT_TAG_WIDTH = 32 - BHT_BANK_WIDTH;
 
@@ -121,20 +123,34 @@ module NPC_Generator(
     always @(posedge clk) begin
         if(reset) begin
             for (integer i = 0; i < BHT_BANK; i++) begin
-                bht_state[i] <= 0;
+                bht_state[i] <= 1;
             end
         end
         else if(is_br_EX) begin
-            if(br) 
+            if(br) begin
                 bht_state[bht_index_write] <= bht_state[bht_index_write] == 3 ? 
                     3 : 
                     bht_state[bht_index_write] + 1;
-            else 
+                btb_branch_tag[btb_index_write]     <= btb_tag_write;
+                btb_predict_pc[btb_index_write]     <= br_target;
+                btb_valid[btb_index_write]          <= 1'b1;
+                btb_history[btb_index_write]        <= bht_state!=0;
+            end else begin
                 bht_state[bht_index_write] <= bht_state[bht_index_write] == 0 ?
                     0 : 
                     bht_state[bht_index_write] - 1; 
+                btb_branch_tag[btb_index_write]     <= btb_tag_write;
+                btb_predict_pc[btb_index_write]     <= br_target;
+                btb_valid[btb_index_write]          <= 1'b1;
+                btb_history[btb_index_write]        <= bht_state!=3;
+            end
         end
     end
+`endif
+`ifndef BTB
+always @(*) begin
+    pre_fail = br;
+end
 `endif
  always @(*) begin
 `ifdef BTB
@@ -144,8 +160,8 @@ module NPC_Generator(
             else 
                 NPC = PC_EX + 4;
         end
-`elsif
-         if (br)
+`else
+        if (br)
         begin
             NPC = br_target;
         end
@@ -157,7 +173,7 @@ module NPC_Generator(
             NPC = jal_target;
         end
 `ifdef BTB
-        else if(btb_hit_read && btb_history[btb_index_read]
+        else if(btb_hit && btb_history[btb_index_read]
     `ifdef BHT
         && bht_hit
     `endif
