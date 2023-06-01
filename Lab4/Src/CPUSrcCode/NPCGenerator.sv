@@ -15,8 +15,8 @@
 // 实验要求  
     // 实现NPC_Generator
 
-`define BTB
-//`define BHT
+//`define BTB
+`define BHT
 
 `ifdef BHT
     `define BTB

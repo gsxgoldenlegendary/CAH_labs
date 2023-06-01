@@ -1,2 +1,5 @@
 .idea/
 xvlog.*
+*.log
+*.pb
+cmake-build-debug/

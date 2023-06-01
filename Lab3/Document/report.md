@@ -22,7 +22,7 @@
 
 ### Cache 结构
 
-在确定了 Cache 大小后，我们通过改变 Cache 行大小、组数以及路数来观察命中率的改变情况。其中<font color=#08f>蓝色</font>为 1 路的情况，<font color=#f80>橙色</font>为 2 路的情况，<font color=#888>灰色</font>为 2 路的情况，<font color=#fc0>黄色</font>为 2 路的情况。
+在确定了 Cache 大小后，我们通过改变 Cache 行大小、组数以及路数来观察命中率的改变情况。其中<font color=#08f>蓝色</font>为 1 路的情况，<font color=#f80>橙色</font>为 2 路的情况，<font color=#888>灰色</font>为 4 路的情况，<font color=#fc0>黄色</font>为 8 路的情况。
 
 对于矩阵乘法的测试结果如下（数据见[仿真记录 Phase 3](#Phase 3-1)）：
 
