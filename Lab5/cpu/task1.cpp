@@ -4,7 +4,7 @@
 
 #include <bits/stdc++.h>
 
-int N = (1 << 10);
+int N = (1 << 11);
 
 inline void gemm_baseline(const float *A, const float *B, float *C) {
     for (int i = 0; i < N; i++) {

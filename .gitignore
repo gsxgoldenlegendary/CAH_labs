@@ -3,3 +3,8 @@ xvlog.*
 *.log
 *.pb
 cmake-build-debug/
+.vs/
+*.sln
+*.vcxproj
+*.vcxproj.user
+x64/

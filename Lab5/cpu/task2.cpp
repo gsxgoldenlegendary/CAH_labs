@@ -6,8 +6,7 @@
 #include "bits/stdc++.h"
 #include "immintrin.h"
 
-int N = (1 << 10);
-int M = (1 << 8);
+int N = (1 << 11);
 
 inline void gemm_verify(const float *A, const float *B, float *C) {
     auto C_baseline = (float *) malloc(N * N * sizeof(float));
@@ -19,7 +18,6 @@ inline void gemm_verify(const float *A, const float *B, float *C) {
             }
         }
     }
-    //for(int i=0;i<N*N;i++) std::cout<<C_baseline[i]<<" \n"[i==N*N-1];
     for (int i = 0; i < N * N; i++) {
         if (std::fabs(C[i] - C_baseline[i]) > 1e-2) {
             std::cout << "gemm_avx wrong answer\n";
@@ -28,19 +26,15 @@ inline void gemm_verify(const float *A, const float *B, float *C) {
     }
 }
 
-inline void gemm_block(const float *A, const float *B, float *C) {
-    for (int i = 0; i < N; i += M) {
-        for (int j = 0; j < N; j += M) {
-            for (int k = 0; k < N; k++) {
-                for (int ii = i; ii < i + M; ii++) {
-                    auto a = _mm256_set1_ps(*(A + ii * N + k));
-                    for (int jj = j; jj < j + M; jj += 8) {
-                        auto b = _mm256_loadu_ps(B + k * N + jj);
-                        auto c = _mm256_loadu_ps(C + ii * N + jj);
-                        c = _mm256_fmadd_ps(a, b, c);
-                        _mm256_storeu_ps(C + ii * N + jj, c);
-                    }
-                }
+inline void gemm_avx(const float *A, const float *B, float *C) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            auto a = _mm256_set1_ps(A[i * N + j]);
+            for (int k = 0; k < N; k += 8) {
+                auto b = _mm256_loadu_ps(B + j * N + k);
+                auto c = _mm256_loadu_ps(C + i * N + k);
+                c = _mm256_fmadd_ps(a, b, c);
+                _mm256_storeu_ps(C + i * N + k, c);
             }
         }
     }
@@ -61,8 +55,7 @@ int main() {
     }
     // measure time
     auto start = std::chrono::high_resolution_clock::now();
-    gemm_block(A, B, C);
-    //for(int i=0;i<N*N;i++) std::cout<<C[i]<<" \n"[i==N*N-1];
+    gemm_avx(A, B, C);
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
     std::cout << "elapsed time: " << elapsed.count() * 1000 << "ms\n";
